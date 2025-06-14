@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from service import calculate_fibonacci
+from wasm_service import calculate_fibonacci_wasm
 
 # Tạo instance FastAPI
 app = FastAPI(
@@ -23,24 +24,34 @@ app.add_middleware(
 # Fibonacci calculation API endpoint
 @app.get("/fibonacci/{n}")
 async def get_fibonacci(n: int):
-    """
-    Calculate the fibonacci of number n.
-    
-    Args:
-        n (int): The number to calculate fibonacci for (must be non-negative)
-        
-    Returns:
-        dict: Contains the input number and its fibonacci result
-        
-    Raises:
-        HTTPException: If n is negative or calculation fails
-    """
     try:
+        import time
+        start_time = time.time()
         result = calculate_fibonacci(n)
+        execution_time = time.time() - start_time
         return {
             "number": n,
             "fibonancy": result,
-            "message": f"Fibonancy of {n} is {result}"
+            "message": f"Fibonancy of {n} is {result}",
+            "execution_time": execution_time
+        }
+    except Exception as e:
+        raise e;
+
+# Fibonacci calculation API endpoint using WASM
+@app.get("/fibonacci-wasm/{n}")
+async def get_fibonacci_wasm(n: int):
+    try:
+        import time
+        start_time = time.time()
+        result = calculate_fibonacci_wasm(n)
+        execution_time = time.time() - start_time
+        return {
+            "number": n,
+            "fibonancy": result,
+            "message": f"Fibonancy of {n} is {result} (calculated using WASM)",
+            "method": "WASM",
+            "execution_time": execution_time
         }
     except Exception as e:
         raise e;
