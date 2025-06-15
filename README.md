@@ -138,17 +138,13 @@ async def get_fibonacci_wasm(n: int):
 
 ```bash
 # Run the server
-python backend/main.py
-
-# Test Python implementation
-curl http://localhost:8000/fibonacci/10
+uvicorn main:app --reload --port 8000
 
 # Test WASM implementation
-curl http://localhost:8000/fibonacci-wasm/10
+curl http://localhost:8000/fibonacci-wasm/39
 
 # Performance comparison (try with n=40)
-time curl http://localhost:8000/fibonacci/40
-time curl http://localhost:8000/fibonacci-wasm/40
+hey -z 40s -c 20 -t 30 http://localhost:8000/fibonacci-wasm/39
 ```
 
 WebAssembly typically provides better performance for complex calculations as it compiles to near-native machine code. 
