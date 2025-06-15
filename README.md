@@ -6,15 +6,18 @@ A demo showcasing WebAssembly integration with Python/FastAPI for computation op
 
 ```
 wasm-demo/
-├── backend/
+├── app/
 │   ├── main.py             # FastAPI server
 │   ├── service.py          # Python service
-│   ├── wasm_service.py     # WASM service
 │   ├── Cargo.toml          # Rust project config
-│   ├── src/
-│   │   └── lib.rs          # Rust source for Fibonacci
-│   └── simple_wasm/
-│       └── fibonacci_wasm.wasm  # Compiled WASM module
+│   ├── wasm/
+│   │   ├── src/
+│   │   │   └── lib.rs          # Rust source for Fibonacci
+│   │   └── build/
+│   │       └── fibonacci_wasm.wasm  # Compiled WASM module
+│   │   └── Cargo.toml          # Rust project config
+│   └── requirements.txt    # Python dependencies
+
 ```
 
 ## Prerequisites
@@ -29,7 +32,7 @@ rustup target add wasm32-unknown-unknown
 ### 2. Install Python dependencies
 
 ```bash
-pip install fastapi uvicorn wasmtime
+pip install -r app/requirements.txt
 ```
 
 ## Creating a WASM Module from Rust
@@ -79,6 +82,7 @@ opt-level = 3
 ### 3. Build WASM Module
 
 ```bash
+cd app/wasm
 cargo build --release --target wasm32-unknown-unknown
 mkdir -p build
 cp target/wasm32-unknown-unknown/release/fibonacci_wasm.wasm build/
@@ -145,6 +149,68 @@ curl http://localhost:8000/fibonacci-wasm/39
 
 # Performance comparison (try with n=40)
 hey -z 40s -c 20 -t 30 http://localhost:8000/fibonacci-wasm/39
+```
+
+## Diagram
+```mermaid
+sequenceDiagram
+    autonumber
+    actor User
+    participant FastAPI as "FastAPI Server"
+    participant Handler as "calculate_fibonacci_wasm()"
+    participant WasmService as "service.py"
+    participant Engine as "Wasmtime Engine"
+    participant Store as "Wasmtime Store"
+    participant Module as "WASM Module"
+    participant Instance as "WASM Instance"
+    participant WasmFunc as "calculate_fibonacci (WASM)"
+    
+    User->>FastAPI: GET /fibonacci-wasm/{n}
+    FastAPI->>Handler: Call get_fibonacci_wasm(n)
+    
+    Handler->>Handler: Start processing time measurement
+    Note over Handler: start_time = time.time()
+    
+    Handler->>WasmService: calculate_fibonacci_wasm(n)
+    
+    WasmService->>WasmService: Check if n >= 0
+    Note over WasmService: If n < 0, raise ValueError
+    
+    WasmService->>WasmService: Determine path to WASM file
+    Note over WasmService: wasm_path = .../fibonacci_wasm.wasm
+    
+    WasmService->>Engine: Create Engine()
+    Engine-->>WasmService: engine
+    
+    WasmService->>Store: Create Store(engine)
+    Store-->>WasmService: store
+    
+    WasmService->>WasmService: Read WASM file
+    Note over WasmService: Read binary content from file
+    
+    WasmService->>Module: Module(engine, wasm_bytes)
+    Module-->>WasmService: module
+    
+    WasmService->>Instance: Instance(store, module, [])
+    Instance-->>WasmService: instance
+    
+    WasmService->>Instance: instance.exports(store)
+    Instance-->>WasmService: Return exports
+    
+    WasmService->>WasmFunc: calculate_fibonacci_func(store, n)
+    Note over WasmFunc: Execute Fibonacci function<br/>written in another language<br/>and compiled to WASM
+    WasmFunc-->>WasmService: Fibonacci result
+    
+    WasmService-->>Handler: Return Fibonacci result
+    
+    Handler->>Handler: End processing time measurement
+    Note over Handler: execution_time = time.time() - start_time
+    
+    Handler->>Handler: Create JSON response
+    
+    Handler-->>FastAPI: Return JSON result
+    FastAPI-->>User: HTTP 200 OK with JSON response
+    Note over User,FastAPI: {"number": n,<br/>"fibonancy": result,<br/>"message": "Fibonancy of n is result (calculated using WASM)",<br/>"method": "WASM",<br/>"execution_time": execution_time}
 ```
 
 WebAssembly typically provides better performance for complex calculations as it compiles to near-native machine code. 

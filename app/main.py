@@ -4,7 +4,7 @@ from service import calculate_fibonacci, calculate_fibonacci_wasm
 
 app = FastAPI(
     title="Backend API",
-    description="API backend đơn giản với FastAPI",
+    description="API backend for Fibonacci calculation",
     version="1.0.0",
     docs_url="/swagger",
     redoc_url="/redoc",
