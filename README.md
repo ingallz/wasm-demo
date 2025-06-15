@@ -80,8 +80,8 @@ opt-level = 3
 
 ```bash
 cargo build --release --target wasm32-unknown-unknown
-mkdir -p simple_wasm
-cp target/wasm32-unknown-unknown/release/fibonacci_wasm.wasm simple_wasm/
+mkdir -p build
+cp target/wasm32-unknown-unknown/release/fibonacci_wasm.wasm build/
 ```
 
 ## Python Integration with WASM

@@ -1,9 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from service import calculate_fibonacci
-from wasm_service import calculate_fibonacci_wasm
+from service import calculate_fibonacci, calculate_fibonacci_wasm
 
-# Tạo instance FastAPI
 app = FastAPI(
     title="Backend API",
     description="API backend đơn giản với FastAPI",
